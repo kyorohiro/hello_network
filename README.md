@@ -28,18 +28,40 @@ docker exec -it pc2 bash
 
 
 docker network create = 基本的には「スイッチ（L2）」に近い
-
+同じネットワークにいるコンテナ同士は
+- 直接通信できる
+- ARPでMACを解決する
 
 
 中に入って (`docker exec -it pc1 bash`)
 
-```
+
 apt update
 apt install -y iproute2 iputils-ping net-tools tcpdump arping
 
 ping 192.168.10.12
 arp -a
-```
+
+
+MEMO
+iproute2 ネットワーク設定を操作する
+ip a        # IPアドレス確認
+ip route    # ルーティング確認
+ip link     # インターフェース確認
+
+iputils 通信テスト
+ping 192.168.x.x
+
+net-tools 確認コマンド
+ifconfig   # ip a の古い版
+arp -a     # ARPテーブル確認
+netstat    # 通信状態
+
+tcpdump 通信を直接見る
+tcpdump -n -i any
+
+arping
+arping 192.168.10.254
 
 ## ② わざと壊す
 
