@@ -1,14 +1,33 @@
 # hello_network
 
-
+```
 ## ① まず「同じネットワーク」
 
-```
-docker network create --subnet 192.168.10.0/24 lab-net
 
+docker network create --subnet 192.168.10.0/24 lab-net
 docker run -dit --name pc1 --network lab-net --ip 192.168.10.11 ubuntu bash
 docker run -dit --name pc2 --network lab-net --ip 192.168.10.12 ubuntu bash
-```
+
+[Memo] 
+使えないアドレス
+ネットワークアドレス
+→ 192.168.10.0
+ブロードキャストアドレス
+→ 192.168.10.255
+使える(/24 の場合): 192.168.10.1 ～ 192.168.10.254
+
+
+-d background で起動
+-i 標準入力を開いたままにする
+-t  仮想ターミナルを割り当てる
+
+
+docker exec -it pc1 bash
+docker exec -it pc2 bash
+のような感じでContainerに入れる
+
+
+
 
 中に入って (`docker exec -it pc1 bash`)
 
