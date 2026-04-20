@@ -27,6 +27,8 @@ docker exec -it pc2 bash
 のような感じでContainerに入れる
 
 
+docker network create = 基本的には「スイッチ（L2）」に近い
+
 
 
 中に入って (`docker exec -it pc1 bash`)
