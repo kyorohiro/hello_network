@@ -59,9 +59,11 @@ ip route add default via 192.168.10.1
 
 
 # 作り直し
+
 ```
 docker rm -f pc1 pc2 router 2>/dev/null
 docker network rm lab-net lan2 2>/dev/null
+
 ```
 
 # 作り直し
@@ -82,6 +84,12 @@ docker run -dit --name pc2 --cap-add=NET_ADMIN --network lan2 --ip 192.168.20.12
 
 docker run -dit --name router --cap-add=NET_ADMIN --network lab-net --ip 192.168.10.254 ubuntu bash
 docker network connect --ip 192.168.20.254 lan2 router
+
+--
+こちらの方が良いかも
+docker run -dit --name router --privileged --network lab-net --ip 192.168.10.254 ubuntu bash
+docker network connect --ip 192.168.20.254 lan2 router
+---
 
 ## router を有効化
 docker exec -it router bash
@@ -122,5 +130,59 @@ ping 192.168.20.12
 docker exec -it pc2 bash
 ping 192.168.10.11
 
+
+```
+
+
+```
+# . ip a と ip route を全部見る
+
+## pc1
+
+docker exec -it pc1 bash
+ip a
+ip route
+exit
+
+## pc 2
+
+docker exec -it pc2 bash
+ip a
+ip route
+exit
+
+
+# 2. ARP を見る
+
+
+docker exec -it pc1 bash
+arp -a
+ping -c 1 192.168.10.254
+arp -a
+
+# 3. tcpdump で ARP と ping を見る
+
+docker exec -it router bash
+apt update
+apt install -y tcpdump
+tcpdump -n -i any arp or icmp
+
+--
+### 別ターミナルで pc1 から ping
+docker exec -it pc1 bash
+ping -c 2 192.168.20.12
+
+# 4. ルートを消して「通らなくする」
+
+docker exec -it pc1 bash
+ip route del 192.168.20.0/24 via 192.168.10.254
+ip route
+ping -c 2 192.168.20.12
+
+# 5. router の ip_forward を切ってみる
+
+docker exec -it router bash
+echo 0 > /proc/sys/net/ipv4/ip_forward
+cat /proc/sys/net/ipv4/ip_forward
 
 ```
