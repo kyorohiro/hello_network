@@ -15,7 +15,12 @@ docker run -dit --name pc2 --network lab-net --ip 192.168.10.12 ubuntu bash
 ブロードキャストアドレス
 → 192.168.10.255
 使える(/24 の場合): 192.168.10.1 ～ 192.168.10.254
-
+※ 192.168.10.1 dockerが利用
+※ 192.168.10.255 ブロードキャスト
+※.  192.168.10. ネットワークアドレス
+10.0.0.0/8
+172.16.0.0/12
+192.168.0.0/16
 
 -d background で起動
 -i 標準入力を開いたままにする
@@ -65,16 +70,15 @@ arping 192.168.10.254
 
 ## ② わざと壊す
 
-以下は Docker では出来ない
-```
+Memo 以下は Docker では出来ない
 ip addr change 192.168.20.11/24 dev eth0
 RTNETLINK answers: Operation not permitted
-```
 
 - ネットワークを外す
 docker network create --subnet 192.168.20.0/24 lan2
 docker network disconnect lab-net pc1
 docker network connect --ip 192.168.20.11 lan2 pc1
+
 
 ## ②-1 Routerを入れて繋げてみる
 
@@ -86,9 +90,9 @@ docker run -dit --name router --privileged ubuntu bash
 
 ## ① router の中に入る
 
-```
+
 docker exec -it router bash
-```
+
 ## ② IP forwarding をON
 
 echo 1 > /proc/sys/net/ipv4/ip_forward
@@ -99,6 +103,7 @@ cat /proc/sys/net/ipv4/ip_forward
 docker exec -it pc1 bash
 ip route add default via 192.168.10.1
 
+```
 
 
 # 作り直し
@@ -229,3 +234,78 @@ echo 0 > /proc/sys/net/ipv4/ip_forward
 cat /proc/sys/net/ipv4/ip_forward
 
 ```
+
+
+# Linux (without docker)
+
+```
+① IPアドレスを設定（Linux）
+
+ip addr add 192.168.10.50/24 dev eth0
+
+// ip addr flush dev eth0 全部消去
+ip addr add 192.168.10.50/24 dev eth0
+
+ip addr show dev eth0
+
+ルータ（デフォルトゲートウェイ）設定
+ip route add default via 192.168.10.254
+
+③ ARPでネットワークに知らせる (mustではない)
+arping -A -I eth0 192.168.10.50
+arping -U -I eth0 192.168.10.50
+
+
+方法② Request形式でばら撒く
+arping -c 3 -I eth0 192.168.10.50
+
+方法③ 静的ARP（相手に直接設定）
+arp -s 192.168.10.50 aa:bb:cc:dd:ee:ff
+
+# Linux Memo
+
+systemd-networkd
+NetworkManager
+
+ip link
+ip link set eth0 up
+ip addr add 192.168.10.5/24 dev eth0
+ip route add default via 192.168.10.254
+
+docker run --network lab-net --ip 192.168.10.254 ...
+```
+
+
+
+```
+openssl req -x509 -newkey rsa:2048 \
+  -keyout key.pem \
+  -out cert.pem \
+  -days 365 \
+  -nodes \
+  -subj "/CN=192.168.10.50" \
+  -addext "subjectAltName = IP:192.168.10.50"
+
+import fs from "node:fs";
+import https from "node:https";
+import express from "express";
+
+const app = express();
+
+app.get("/", (req, res) => {
+  res.send("hello https");
+});
+
+https.createServer(
+  {
+    key: fs.readFileSync("./key.pem"),
+    cert: fs.readFileSync("./cert.pem"),
+  },
+  app
+).listen(3443, () => {
+  console.log("https://localhost:3443");
+});
+```
+
+C:\Windows\System32\drivers\etc\hosts
+保存した時点で基本的に有効なはず
