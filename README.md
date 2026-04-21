@@ -309,3 +309,53 @@ https.createServer(
 
 C:\Windows\System32\drivers\etc\hosts
 保存した時点で基本的に有効なはず
+
+
+arping -I eth0 192.168.10.255
+echo "hello" | nc -u -b 192.168.10.255 12345
+nc -u -l 12345
+
+
+import socket
+
+s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+
+s.sendto(b"hello", ("192.168.10.255", 12345))
+
+ping -b 192.168.10.255
+
+
+```
+send
+$client = New-Object System.Net.Sockets.UdpClient
+$client.EnableBroadcast = $true
+$endpoint = New-Object System.Net.IPEndPoint ([System.Net.IPAddress]::Parse("192.168.10.255"), 12345)
+$data = [System.Text.Encoding]::UTF8.GetBytes("hello")
+
+$client.Send($data, $data.Length, $endpoint)
+$client.Close()
+```
+
+```
+receve
+$client = New-Object System.Net.Sockets.UdpClient(12345)
+$endpoint = New-Object System.Net.IPEndPoint([System.Net.IPAddress]::Any,0)
+
+$data = $client.Receive([ref]$endpoint)
+[System.Text.Encoding]::UTF8.GetString($data)
+```
+
+
+echo hello | nc -u -b 192.168.10.255 12345
+
+
+タスクマネージャー → パフォーマンス → ネットワーク
+ip -s link
+arp -a
+
+
+```
+Wireshark
+```
+ping 192.168.10.1 -t
