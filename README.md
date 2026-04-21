@@ -359,3 +359,9 @@ arp -a
 Wireshark
 ```
 ping 192.168.10.1 -t
+
+arp -a
+
+arp -d * する
+arp -a
+ping 192.168.10.20
